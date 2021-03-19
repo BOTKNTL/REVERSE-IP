@@ -16,6 +16,8 @@ def banner():
     Facebook    : https://facebook.com/Rangga.Haxor/
     '''
 
+    return print(banner)
+
 def main():
     temp_used = []
     temp = []
