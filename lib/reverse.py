@@ -1,7 +1,6 @@
 import requests
 from multiprocessing import Pool
-import argparse
-from colorama import Fore
+from colorama import Fore, init
 class ReverseIP(object):
 
     def __init__(self, thread, ip, proxy):
@@ -9,10 +8,12 @@ class ReverseIP(object):
         self.ip = ip
         self.proxy = proxy
 
-    def reverse(self, ip, proxy):
+    init(convert=True)
+
+    def reverse(self, ip):
         try:
-            http_proxy = 'http://'+proxy
-            https_proxy = 'https://'+proxy
+            http_proxy = 'http://'+self.proxy
+            https_proxy = 'https://'+self.proxy
             proxyDict = {
                 'http': http_proxy,
                 'https': https_proxy
@@ -27,16 +28,16 @@ class ReverseIP(object):
                 elif '<' in request.text or '>' in request.text:
                     pass
                 else:
-                    print(Fore.GREEN ,'Reversing IP: {}\n'.format(ip))
-                    print(Fore.LIGHTMAGENTA_EX ,'=> {}'.format(request.text))
+                    print(Fore.LIGHTBLUE_EX ,'Reversing IP: {}\n'.format(ip))
+                    print(Fore.LIGHTGREEN_EX ,'=> {}'.format(request.text))
                     open('reversed.txt','a').write(request.text+'\n')
                     pass
         except Exception as e:
-            print(Fore.RED, 'Error IP: {}'.format(ip))
+            print(Fore.LIGHTRED_EX, 'Error IP: {}'.format(ip))
             open('err_ip.txt','a').write(ip+'\n')
 
     def run(self):
         with Pool(self.thread) as worker:
-            worker.starmap(self.reverse, zip(self.ip, self.proxy))
+            worker.map(self.reverse, self.ip)
             worker.close()
             worker.join()

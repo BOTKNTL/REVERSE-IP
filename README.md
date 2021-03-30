@@ -2,6 +2,10 @@
 
 This Tools for Reversing IP from HackerTarget Using Python3
 
+Auto Grabbing & Check Proxy
+
+<img src='pict.png'>
+
 # How to Usage
 
 clone my project
@@ -18,7 +22,7 @@ installing module requirements
 
 running program
 
-      python3 reverseIp.py
+      python3 reverseIP.py
       
 Result saved as reversed.txt
 

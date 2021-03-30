@@ -1,57 +1,40 @@
 import proxygrab
 from Proxy_List_Scrapper import Scrapper, Proxy, ScrapperException
-import urllib.request
-import socket
-import urllib.error
-from colorama import Fore
+import requests
 from multiprocessing.dummy import Pool
-import time
 
 class Checker(object):
-
-    PROXY = []
 
     def __init__(self, thread_count, proxy):
         self.thread_count = thread_count
         self.proxy = proxy
 
-
-    def is_bad_proxy(self, pip):
-        try:
-            proxy_handler = urllib.request.ProxyHandler({'http': pip})
-            opener = urllib.request.build_opener(proxy_handler)
-            opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-            urllib.request.install_opener(opener)
-            req=urllib.request.Request('http://www.google.com')
-            sock=urllib.request.urlopen(req)
-        except urllib.error.HTTPError as e:
-            return e.code
-        except Exception as detail:
-            return True
-        return False
-
     def check(self, proxyList):
-        
-        socket.setdefaulttimeout(120)
-        if self.is_bad_proxy(proxyList):
+        try:
+            http_proxy = 'http://'+proxyList
+            https_proxy = 'https://'+proxyList
+            proxyDict = {
+                'http': http_proxy,
+                'https': https_proxy
+            }
+            req = requests.get('http://www.google.com', proxies=proxyDict, timeout=15)
+            if req.status_code == 200:
+                save = open('proxy.txt','a')
+                save.write(proxyList+'\n')
+                save.close()
+            else:
+                pass
+        except Exception:
             pass
-        else:
-            self.PROXY.append(proxyList)
-
+        
     def run(self):
         with Pool(self.thread_count) as worker:
             worker.map(self.check, self.proxy)
             worker.close()
             worker.join()
 
-        with open('vuln-proxy.txt', 'w') as f:
-            for i in self.PROXY:
-                f.write(i + '\n')
-
 def create_proxy():
-
-    PROXY = []
-
+    proxy = []
     print('Scrape Proxy')
     try:
         print('Scrape From Proxy_List_Scrapper')
@@ -73,19 +56,36 @@ def create_proxy():
         data = scrapper.getProxies()
 
         for item in data.proxies:
-            PROXY.append('{}:{}\n'.format(item.ip, item.port))
+            proxy.append('{}:{}'.format(item.ip, item.port))
     except:
         pass
     try:
-        proxy_types = ('http', 'https', 'socks4', 'socks5')
-        for i in proxy_types:
-            PROXY.append(proxygrab.get_proxy(i))
+        print('Scrape Socks4 Proxy')
+        socks4 = proxygrab.get_socks4(method='all')
+        proxy.extend(socks4)
     except:
         pass
-    print('Check Proxy')
+    try:
+        print('Scrape Socks5 Proxy')
+        socks5 = proxygrab.get_socks5(method='all')
+        proxy.extend(socks5)
+    except:
+        pass
+    try:
+        print('Scrape http Proxy')
+        http = proxygrab.get_http(method='all')
+        proxy.extend(http)
+    except:
+        pass
+    try:
+        print('Scrape https Proxy')
+        https = proxygrab.get_https(method='all')
+        proxy.extend(https)
+    except:
+        pass
+    
+    #Thread Default 100 tinggal ganti doang
+    check = Checker(100, proxy)
+    check.run()
 
-    # Terserah mw pake thread brp tinggal ganti doang
-    runner = Checker(100, PROXY)
-    runner.run()
-
-    return print('Done Scrape Proxy')
+    return print('Done')
